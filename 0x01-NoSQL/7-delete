@@ -1,0 +1,3 @@
+// script to delete all documents with name="Holberton school" from collection
+
+db.school.deleteMany({name: "Holberton school"});
