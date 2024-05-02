@@ -20,7 +20,7 @@ class Cache:
                                                                     bytes,
                                                                     int,
                                                                     float]:
-        """ method that take a key string argument and an optional arguement """
+        """ method that take a key string argument with optional arguement """
         res = self._redis.get(key)
         return fn(res) if fn else res
 
@@ -31,11 +31,12 @@ class Cache:
     def get_int(self, data: bytes) -> int:
         """ It will automatically parametrize Cache.get Bytes to integer """
         return int.from_bytes(data, sys.byteorder)
-    
+
 
 def count_calls(method: Callable) -> Callable:
     """ count how many times methods of the Cache class are called. """
     key = method.__qualname__
+
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """ function decorator for defining a wrapper function """
@@ -47,6 +48,7 @@ def count_calls(method: Callable) -> Callable:
 def decode_utf8(b: bytes) -> str:
     """ Decoder for the methods """
     return b.decode('utf-8') if type(b) == bytes else b
+
 
 def replay(method: Callable):
     """  function to display the history of calls of a particular function """
@@ -69,6 +71,7 @@ def call_history(method: Callable) -> Callable:
     key = method.__qualname__
     i = "".join([key, ":inputs"])
     o = "".join([key, ":outputs"])
+
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """ function decorator for defining a wrapper function """
