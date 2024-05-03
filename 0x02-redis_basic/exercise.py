@@ -1,53 +1,11 @@
 #!/usr/bin/env python3
 """ 0x02. Redis basic """
 
-from functools import wraps
-import redis
 import sys
+import redis
+from functools import wraps
 from typing import Union, Optional, Callable
 from uuid import uuid4
-
-
-class Cache:
-    """ Create a Cache class """
-
-    def __init__(self):
-        """ an instance of the Redis client as a private variable """
-        self._redis = redis.Redis()
-        self._redis.flushdb()
-
-    def get(self, key: str, fn: Optional[Callable] = None) -> Union[str,
-                                                                    bytes,
-                                                                    int,
-                                                                    float]:
-        """ method that take a key string argument with optional arguement """
-        res = self._redis.get(key)
-        return fn(res) if fn else res
-
-    def get_str(self, data: bytes) -> str:
-        """ It will automatically parametrize Cache.get Bytes to string """
-        return data.decode('utf-8')
-
-    def get_int(self, data: bytes) -> int:
-        """ It will automatically parametrize Cache.get Bytes to integer """
-        return int.from_bytes(data, sys.byteorder)
-
-
-def count_calls(method: Callable) -> Callable:
-    """ count how many times methods of the Cache class are called. """
-    key = method.__qualname__
-
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        """ function decorator for defining a wrapper function """
-        self._redis.incr(key)
-        return method(self, *args, **kwargs)
-    return wrapper
-
-
-def decode_utf8(b: bytes) -> str:
-    """ Decoder for the methods """
-    return b.decode('utf-8') if type(b) == bytes else b
 
 
 def replay(method: Callable):
@@ -81,6 +39,31 @@ def call_history(method: Callable) -> Callable:
         return res
     return wrapper
 
+def count_calls(method: Callable) -> Callable:
+    """ count how many times methods of the Cache class are called. """
+    key = method.__qualname__
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """ function decorator for defining a wrapper function """
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+    return wrapper
+
+
+def decode_utf8(b: bytes) -> str:
+    """ Decoder for the methods """
+    return b.decode('utf-8') if type(b) == bytes else b
+
+
+class Cache:
+    """ Create a Cache class """
+
+    def __init__(self):
+        """ an instance of the Redis client as a private variable """
+        self._redis = redis.Redis()
+        self._redis.flushdb()
+
     @count_calls
     @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
@@ -88,3 +71,19 @@ def call_history(method: Callable) -> Callable:
         key = str(uuid4())
         self._redis.set(key, data)
         return key
+
+    def get(self, key: str, fn: Optional[Callable] = None) -> Union[str,
+                                                                    bytes,
+                                                                    int,
+                                                                    float]:
+        """ method that take a key string argument with optional arguement """
+        res = self._redis.get(key)
+        return fn(res) if fn else res
+
+    def get_str(self, data: bytes) -> str:
+        """ It will automatically parametrize Cache.get Bytes to string """
+        return data.decode('utf-8')
+
+    def get_int(self, data: bytes) -> int:
+        """ It will automatically parametrize Cache.get Bytes to integer """
+        return int.from_bytes(data, sys.byteorder)
