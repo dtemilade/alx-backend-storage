@@ -39,6 +39,7 @@ def call_history(method: Callable) -> Callable:
         return res
     return wrapper
 
+
 def count_calls(method: Callable) -> Callable:
     """ count how many times methods of the Cache class are called. """
     key = method.__qualname__
