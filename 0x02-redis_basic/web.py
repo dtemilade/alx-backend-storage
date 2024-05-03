@@ -10,7 +10,6 @@ store = redis.Redis()
 def count_url_access(method):
     """Track how many times a particular URL was accessed in the key"""
     @wraps(method)
-
     def wrapper(url):
         count_key = "count:" + url
         cached_key = "cached:" + url
